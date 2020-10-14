@@ -6,9 +6,10 @@
  * See [the website]{@link https://vaadin.com/license/cval-3} for the complete license.
  */
 
-import { html, PolymerElement } from '@polymer/polymer/polymer-element';
+// import { html, PolymerElement } from '@polymer/polymer/polymer-element';
 import { ThemableMixin } from '@vaadin/vaadin-themable-mixin';
 import { ElementMixin } from '@vaadin/vaadin-element-mixin';
+import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 
 /**
@@ -43,17 +44,7 @@ import '@vaadin/vaadin-license-checker/vaadin-license-checker';
  * @mixes ThemableMixin
  * @demo demo/index.html
  */
-class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(PolymerElement)) {
-  static get template() {
-    return html`
-      <style>
-        :host {
-          display: block;
-        }
-      </style>
-      <slot>vcf-multiselect-combo-box</slot>
-    `;
-  }
+class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)) {
 
   static get is() {
     return 'vcf-multiselect-combo-box';
@@ -61,10 +52,6 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(PolymerElement))
 
   static get version() {
     return '1.0.0';
-  }
-
-  static get properties() {
-    return {};
   }
 
   /**
