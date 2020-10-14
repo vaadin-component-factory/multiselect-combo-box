@@ -11,6 +11,7 @@ import { ThemableMixin } from '@vaadin/vaadin-themable-mixin';
 import { ElementMixin } from '@vaadin/vaadin-element-mixin';
 import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
+import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -52,6 +53,27 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
   static get version() {
     return '1.0.0';
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+
+    this.renderer = (root, owner, model) => {
+      let labelText = '';
+      if (!(typeof model.item === 'string')) {
+        labelText = model.item[this.itemLabelPath];
+      } else {
+        labelText = model.item;
+      }
+      if (!root.firstElementChild) {
+        const itemNode = document.createElement('div');
+        const itemCheckbox = document.createElement('vaadin-checkbox');
+        itemCheckbox.addEventListener('change', () => { itemCheckbox.checked && (model.index = 0) });
+        itemNode.appendChild(itemCheckbox);
+        itemNode.appendChild(document.createTextNode(labelText));
+        root.appendChild(itemNode);
+      }
+    }
   }
 
   /**
