@@ -47,6 +47,15 @@ import '@vaadin/vaadin-checkbox/vaadin-checkbox';
  */
 class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)) {
 
+  static get properties() {
+    return {
+      selectedItems: {
+        type: Array,
+        value: () => []
+      }
+    };
+  }
+
   static get is() {
     return 'vcf-multiselect-combo-box';
   }
@@ -68,7 +77,19 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       if (!root.firstElementChild) {
         const itemNode = document.createElement('div');
         const itemCheckbox = document.createElement('vaadin-checkbox');
-        itemCheckbox.addEventListener('change', () => { itemCheckbox.checked && (model.index = 0) });
+        itemCheckbox.addEventListener('change', () => {
+          if (itemCheckbox.checked) {
+            this.selectedItems = [...this.selectedItems, model.item];
+          } else {
+            this.selectedItems.splice(this.selectedItems.findIndex(i => {
+              if ((typeof model.item === 'string')) {
+                return i === model.item;
+              } else {
+                return i[this.itemValuePath] === model.item[this.itemValuePath];
+              }
+            }), 1);
+          }
+        });
         itemNode.appendChild(itemCheckbox);
         itemNode.appendChild(document.createTextNode(labelText));
         root.appendChild(itemNode);
