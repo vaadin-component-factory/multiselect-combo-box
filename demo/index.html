@@ -102,10 +102,28 @@
         <h2 slot="header" class="hidden">Simple Example</h2>
         <demo-snippet>
           <template>
-            <vcf-multiselect-combo-box></vcf-multiselect-combo-box>
+            <vcf-multiselect-combo-box id="simpleExample"></vcf-multiselect-combo-box>
             <script>
               window.addEventListener('WebComponentsReady', () => {
-                // Simple example
+                const cbo = document.querySelector('#simpleExample');
+                cbo.items = ['Option 1', 'Option 2'];
+              });
+            </script>
+          </template>
+        </demo-snippet>
+      </vcf-anchor-nav-section>
+
+      <vcf-anchor-nav-section name="Simple Example">
+        <h2 slot="header" class="hidden">Object Example</h2>
+        <demo-snippet>
+          <template>
+            <vcf-multiselect-combo-box id="objectExample"></vcf-multiselect-combo-box>
+            <script>
+              window.addEventListener('WebComponentsReady', () => {
+                const cbo = document.querySelector('#objectExample');
+                cbo.items = [{ label: 'Object 1', value: 'obj1' }, { label: 'Object 2', value: 'obj2' }];
+                cbo.itemLabelPath = 'label';
+                cbo.itemValuePath = 'value';
               });
             </script>
           </template>
