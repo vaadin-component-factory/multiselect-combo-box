@@ -74,26 +74,57 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       } else {
         labelText = model.item;
       }
-      if (!root.firstElementChild) {
-        const itemNode = document.createElement('div');
-        const itemCheckbox = document.createElement('vaadin-checkbox');
-        itemCheckbox.addEventListener('change', () => {
-          if (itemCheckbox.checked) {
-            this.selectedItems = [...this.selectedItems, model.item];
-          } else {
-            this.selectedItems.splice(this.selectedItems.findIndex(i => {
-              if ((typeof model.item === 'string')) {
-                return i === model.item;
-              } else {
-                return i[this.itemValuePath] === model.item[this.itemValuePath];
-              }
-            }), 1);
-          }
-        });
-        itemNode.appendChild(itemCheckbox);
-        itemNode.appendChild(document.createTextNode(labelText));
-        root.appendChild(itemNode);
+      if (root.firstElementChild) {
+        root.innerHTML = '';
       }
+      const itemNode = document.createElement('div');
+      const itemCheckbox = document.createElement('vaadin-checkbox');
+      itemCheckbox.checked = this._isItemChecked(model.item) ? true : false;
+      itemCheckbox.addEventListener('change', () => {
+        if (itemCheckbox.checked) {
+          this.selectedItems = [...this.selectedItems, model.item];
+        } else {
+          this.selectedItems.splice(this.selectedItems.findIndex(i => {
+            if ((typeof model.item === 'string')) {
+              return i === model.item;
+            } else {
+              return i[this.itemValuePath] === model.item[this.itemValuePath];
+            }
+          }), 1);
+        }
+
+        this.items = this.items.sort((a, b) => {
+          if (typeof a === 'string') {
+            if (this.selectedItems.indexOf(a) > -1) {
+              return -1;
+            } else if (this.selectedItems.indexOf(b) > -1) {
+              return 1;
+            } else {
+              return 0;
+            }
+          } else {
+            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+              return -1;
+            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        }).slice(0);
+      });
+      itemNode.appendChild(itemCheckbox);
+      itemNode.appendChild(document.createTextNode(labelText));
+      root.appendChild(itemNode);
+    }
+  }
+
+  /** @private */
+  _isItemChecked(item) {
+    if (typeof item === 'string') {
+      return this.selectedItems.indexOf(item) > -1;
+    } else {
+      return this.selectedItems.some(i => i[this.itemValuePath] === item[this.itemValuePath]);
     }
   }
 
