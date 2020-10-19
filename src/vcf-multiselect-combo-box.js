@@ -51,7 +51,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     return {
       selectedItems: {
         type: Array,
-        value: () => []
+        value: () => [],
+        observer: '_selectedItemsChanged'
       }
     };
   }
@@ -66,6 +67,25 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
   connectedCallback() {
     super.connectedCallback();
+
+    // This will prevent the component from setting the
+    // `value` property and showing the blue tick beside
+    // the selected item.
+    this._selectedItemChanged = () => {};
+
+    this._overlaySelectedItemChanged = (e) => {
+      // stop this private event from leaking outside.
+      e.stopPropagation();
+
+      if (this.opened) {
+        this._focusedIndex = this.filteredItems.indexOf(e.detail.item);
+      } else if (this.selectedItem !== e.detail.item) {
+        this.selectedItem = e.detail.item;
+        this._detectAndDispatchChange();
+      }
+    }
+    this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
+    this.$.overlay.addEventListener('selection-changed', this._overlaySelectedItemChanged.bind(this));
 
     this.renderer = (root, owner, model) => {
       let labelText = '';
@@ -84,13 +104,14 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         if (itemCheckbox.checked) {
           this.selectedItems = [...this.selectedItems, model.item];
         } else {
-          this.selectedItems.splice(this.selectedItems.findIndex(i => {
+          const itemIndex = this.selectedItems.findIndex(i => {
             if ((typeof model.item === 'string')) {
               return i === model.item;
             } else {
               return i[this.itemValuePath] === model.item[this.itemValuePath];
             }
-          }), 1);
+          });
+          this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
         }
 
         this.items = this.items.sort((a, b) => {
@@ -117,6 +138,19 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       itemNode.appendChild(document.createTextNode(labelText));
       root.appendChild(itemNode);
     }
+
+    const boundOldOpenedChanged = this._openedChanged.bind(this);
+    this._openedChanged = (value, old) => {
+      boundOldOpenedChanged(value, old);
+
+      if (value) {
+        this._addTopButtons();
+      }
+    }
+  }
+
+  _selectedItemsChanged(value, oldValue) {
+    this.render();
   }
 
   /** @private */
@@ -125,6 +159,37 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       return this.selectedItems.indexOf(item) > -1;
     } else {
       return this.selectedItems.some(i => i[this.itemValuePath] === item[this.itemValuePath]);
+    }
+  }
+
+  /** @private */
+  _addTopButtons() {
+    if (this.opened) {
+      const topButtonsContainer = document.createElement('div');
+      topButtonsContainer.id = 'top-buttons-container';
+      topButtonsContainer.style.display = 'flex';
+      topButtonsContainer.style.flexDirection = 'column';
+      topButtonsContainer.style.padding = '0 .5em 0';
+      const selectAllButton = document.createElement('vaadin-button');
+      selectAllButton.innerText = "Select All";
+      const clearButton = document.createElement('vaadin-button');
+      clearButton.innerText = "Clear";
+
+      selectAllButton.addEventListener('click', () => {
+        this.selectedItems = [...this.items];
+      });
+
+      clearButton.addEventListener('click', () => {
+        this.selectedItems = [];
+      });
+
+      topButtonsContainer.appendChild(selectAllButton);
+      topButtonsContainer.appendChild(clearButton);
+
+      const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
+      if (!targetNode.querySelector('#top-buttons-container')) {
+        this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot.prepend(topButtonsContainer);
+      }
     }
   }
 
