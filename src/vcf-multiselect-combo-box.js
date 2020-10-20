@@ -13,6 +13,8 @@ import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
+import { commitValue, overlaySelectedItemChanged, renderer } from './helpers';
+
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
  *
@@ -47,6 +49,30 @@ import '@vaadin/vaadin-checkbox/vaadin-checkbox';
  */
 class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)) {
 
+  constructor() {
+    super();
+
+    this._boundOverriddenCommitValue = commitValue.bind(this);
+    this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
+    this._boundRenderer = renderer.bind(this);
+  }
+
+  ready() {
+    super.ready();
+
+    this._commitValue = this._boundOverriddenCommitValue;
+    this.renderer = this._boundRenderer;
+
+    const boundOldOpenedChanged = this._openedChanged.bind(this);
+    this._openedChanged = (value, old) => {
+      boundOldOpenedChanged(value, old);
+
+      if (value) {
+        this._addTopButtons();
+      }
+    }
+  }
+
   static get properties() {
     return {
       selectedItems: {
@@ -73,83 +99,20 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     // the selected item.
     this._selectedItemChanged = () => {};
 
-    this._overlaySelectedItemChanged = (e) => {
-      // stop this private event from leaking outside.
-      e.stopPropagation();
-
-      if (this.opened) {
-        this._focusedIndex = this.filteredItems.indexOf(e.detail.item);
-      } else if (this.selectedItem !== e.detail.item) {
-        this.selectedItem = e.detail.item;
-        this._detectAndDispatchChange();
-      }
-    }
     this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
-    this.$.overlay.addEventListener('selection-changed', this._overlaySelectedItemChanged.bind(this));
-
-    this.renderer = (root, owner, model) => {
-      let labelText = '';
-      if (!(typeof model.item === 'string')) {
-        labelText = model.item[this.itemLabelPath];
-      } else {
-        labelText = model.item;
-      }
-      if (root.firstElementChild) {
-        root.innerHTML = '';
-      }
-      const itemNode = document.createElement('div');
-      const itemCheckbox = document.createElement('vaadin-checkbox');
-      itemCheckbox.checked = this._isItemChecked(model.item) ? true : false;
-      itemCheckbox.addEventListener('change', () => {
-        if (itemCheckbox.checked) {
-          this.selectedItems = [...this.selectedItems, model.item];
-        } else {
-          const itemIndex = this.selectedItems.findIndex(i => {
-            if ((typeof model.item === 'string')) {
-              return i === model.item;
-            } else {
-              return i[this.itemValuePath] === model.item[this.itemValuePath];
-            }
-          });
-          this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
-        }
-
-        this.items = this.items.sort((a, b) => {
-          if (typeof a === 'string') {
-            if (this.selectedItems.indexOf(a) > -1) {
-              return -1;
-            } else if (this.selectedItems.indexOf(b) > -1) {
-              return 1;
-            } else {
-              return 0;
-            }
-          } else {
-            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-              return -1;
-            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
-        }).slice(0);
-      });
-      itemNode.appendChild(itemCheckbox);
-      itemNode.appendChild(document.createTextNode(labelText));
-      root.appendChild(itemNode);
-    }
-
-    const boundOldOpenedChanged = this._openedChanged.bind(this);
-    this._openedChanged = (value, old) => {
-      boundOldOpenedChanged(value, old);
-
-      if (value) {
-        this._addTopButtons();
-      }
-    }
+    this.$.overlay.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
   }
 
   _selectedItemsChanged(value, oldValue) {
+    this._inputElementValue = value.reduce((prev, current) => {
+      let val = '';
+      if ((typeof current === 'string')) {
+        val = current;
+      } else {
+        val = current[this.itemLabelPath];
+      }
+      return `${val}${prev === '' ? '' : `, ${prev}`}`;
+    }, '')
     this.render();
   }
 
