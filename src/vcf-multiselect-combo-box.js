@@ -87,6 +87,46 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
     this.$.overlay.addEventListener('selection-changed', this._overlaySelectedItemChanged.bind(this));
 
+    this._commitValue = () => {
+      if (this.$.overlay._items && this._focusedIndex > -1) {
+        const focusedItem = this.$.overlay._items[this._focusedIndex];
+        if (this.selectedItem !== focusedItem) {
+          this.selectedItem = focusedItem;
+        }
+        // make sure input field is updated in case value doesn't change (i.e. FOO -> foo)
+        // this._inputElementValue = this._getItemLabel(this.selectedItem);
+      } else if (this._inputElementValue === '' || this._inputElementValue === undefined) {
+        this.selectedItem = null;
+
+        if (this.allowCustomValue) {
+          this.value = '';
+        }
+      } else {
+        if (this.allowCustomValue
+          // to prevent a repetitive input value being saved after pressing ESC and Tab.
+          && !(this.filteredItems && this.filteredItems.filter(item => this._getItemLabel(item) === this._inputElementValue).length)) {
+
+          const e = new CustomEvent('custom-value-set', {detail: this._inputElementValue, composed: true, cancelable: true, bubbles: true});
+          this.dispatchEvent(e);
+          if (!e.defaultPrevented) {
+            const customValue = this._inputElementValue;
+            this._selectItemForValue(customValue);
+            this.value = customValue;
+          }
+        } else {
+          // this._inputElementValue = this.selectedItem ? this._getItemLabel(this.selectedItem) : (this.value || '');
+        }
+      }
+
+      this._detectAndDispatchChange();
+
+      this._clearSelectionRange();
+
+      if (!this.dataProvider) {
+        this.filter = '';
+      }
+    }
+
     this.renderer = (root, owner, model) => {
       let labelText = '';
       if (!(typeof model.item === 'string')) {
@@ -150,6 +190,15 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   _selectedItemsChanged(value, oldValue) {
+    this._inputElementValue = value.reduce((prev, current) => {
+      let val = '';
+      if ((typeof current === 'string')) {
+        val = current;
+      } else {
+        val = current[this.itemLabelPath];
+      }
+      return `${val}${prev === '' ? '' : `, ${prev}`}`;
+    }, '')
     this.render();
   }
 
