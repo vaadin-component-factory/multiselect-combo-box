@@ -114,6 +114,14 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       return `${val}${prev === '' ? '' : `, ${prev}`}`;
     }, '')
     this.render();
+
+    const e = new CustomEvent('selected-items-changed', {
+      detail: value,
+      composed: true,
+      cancelable: false,
+      bubbles: true
+    });
+    this.dispatchEvent(e);
   }
 
   /** @private */
