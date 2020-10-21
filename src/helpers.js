@@ -15,39 +15,10 @@ export function renderer(root, owner, model) {
   itemCheckbox.checked = this._isItemChecked(model.item) ? true : false;
   itemCheckbox.addEventListener('change', () => {
     if (itemCheckbox.checked) {
-      this.selectedItems = [...this.selectedItems, model.item];
+      this._selectItem(model.item);
     } else {
-      const itemIndex = this.selectedItems.findIndex(i => {
-        if (typeof model.item === 'string') {
-          return i === model.item;
-        } else {
-          return i[this.itemValuePath] === model.item[this.itemValuePath];
-        }
-      });
-      this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
+      this._deselectItem(model.item);
     }
-
-    this.items = this.items
-      .sort((a, b) => {
-        if (typeof a === 'string') {
-          if (this.selectedItems.indexOf(a) > -1) {
-            return -1;
-          } else if (this.selectedItems.indexOf(b) > -1) {
-            return 1;
-          } else {
-            return 0;
-          }
-        } else {
-          if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-            return -1;
-          } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }
-      })
-      .slice(0);
   });
   itemNode.appendChild(itemCheckbox);
   itemNode.appendChild(document.createTextNode(labelText));
@@ -112,5 +83,27 @@ export function overlaySelectedItemChanged(e) {
   } else if (this.selectedItem !== e.detail.item) {
     this.selectedItem = e.detail.item;
     this._detectAndDispatchChange();
+  }
+}
+
+export function onEnter(e) {
+  // should close on enter when custom values are allowed, input field is cleared, or when an existing
+  // item is focused with keyboard. If auto open is disabled, under the same conditions, commit value.
+  if (
+    (this.opened || this.autoOpenDisabled) &&
+    (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
+  ) {
+    const targetItem = this.items[this._focusedIndex];
+    if (!this._isItemChecked(targetItem)) {
+      this._selectItem(targetItem);
+    } else {
+      this._deselectItem(targetItem);
+    }
+
+    // Do not submit the surrounding form.
+    e.preventDefault();
+
+    // Do not trigger global listeners
+    e.stopPropagation();
   }
 }

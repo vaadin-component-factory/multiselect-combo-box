@@ -106,14 +106,17 @@
             <script>
               window.addEventListener('WebComponentsReady', () => {
                 const cbo = document.querySelector('#simpleExample');
-                cbo.items = ['Option 1', 'Option 2'];
+                cbo.items = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot',
+                'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November',
+                'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor',
+                'Whiskey', 'Xray', 'Yankee', 'Zulu'];
               });
             </script>
           </template>
         </demo-snippet>
       </vcf-anchor-nav-section>
 
-      <vcf-anchor-nav-section name="Simple Example">
+      <vcf-anchor-nav-section name="Object Example">
         <h2 slot="header" class="hidden">Object Example</h2>
         <demo-snippet>
           <template>
@@ -121,7 +124,34 @@
             <script>
               window.addEventListener('WebComponentsReady', () => {
                 const cbo = document.querySelector('#objectExample');
-                cbo.items = [{ label: 'Object 1', value: 'obj1' }, { label: 'Object 2', value: 'obj2' }];
+                cbo.items = [
+                { label: 'Alpha', value: 'A' },
+                { label: 'Bravo', value: 'B' },
+                { label: 'Charlie', value: 'C' },
+                { label: 'Delta', value: 'D' },
+                { label: 'Echo', value: 'E' },
+                { label: 'Foxtrot',value: 'F' },
+                { label: 'Golf', value: 'G' },
+                { label: 'Hotel', value: 'H' },
+                { label: 'India', value: 'I' },
+                { label: 'Juliet', value: 'J' },
+                { label: 'Kilo', value: 'K' },
+                { label: 'Lima', value: 'L' },
+                { label: 'Mike', value: 'M' },
+                { label: 'November',value: 'N' },
+                { label: 'Oscar', value: 'O' },
+                { label: 'Papa', value: 'P' },
+                { label: 'Quebec', value: 'Q' },
+                { label: 'Romeo', value: 'R' },
+                { label: 'Sierra', value: 'S' },
+                { label: 'Tango', value: 'T' },
+                { label: 'Uniform', value: 'U' },
+                { label: 'Victor',value: 'V' },
+                { label: 'Whiskey', value: 'W' },
+                { label: 'Xray', value: 'X' },
+                { label: 'Yankee', value: 'Y' },
+                { label: 'Zulu', value: 'Z' },
+                ];
                 cbo.itemLabelPath = 'label';
                 cbo.itemValuePath = 'value';
               });
