@@ -13,7 +13,7 @@ import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
-import { commitValue, overlaySelectedItemChanged, renderer } from './helpers';
+import { commitValue, overlaySelectedItemChanged, renderer, onEnter } from './helpers';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -55,6 +55,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     this._boundOverriddenCommitValue = commitValue.bind(this);
     this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
     this._boundRenderer = renderer.bind(this);
+    this._boundOnEnter = onEnter.bind(this);
   }
 
   ready() {
@@ -62,6 +63,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
     this._commitValue = this._boundOverriddenCommitValue;
     this.renderer = this._boundRenderer;
+    this._onEnter = this._boundOnEnter;
 
     const boundOldOpenedChanged = this._openedChanged.bind(this);
     this._openedChanged = (value, old) => {
@@ -112,7 +114,32 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         val = current[this.itemLabelPath];
       }
       return `${val}${prev === '' ? '' : `, ${prev}`}`;
-    }, '')
+    }, '');
+
+    if (this.items) {
+      this.items = this.items
+        .sort((a, b) => {
+          if (typeof a === 'string') {
+            if (this.selectedItems.indexOf(a) > -1) {
+              return -1;
+            } else if (this.selectedItems.indexOf(b) > -1) {
+              return 1;
+            } else {
+              return 0;
+            }
+          } else {
+            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+              return -1;
+            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        })
+        .slice(0);
+    }
+
     this.render();
 
     const e = new CustomEvent('selected-items-changed', {
@@ -130,6 +157,27 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       return this.selectedItems.indexOf(item) > -1;
     } else {
       return this.selectedItems.some(i => i[this.itemValuePath] === item[this.itemValuePath]);
+    }
+  }
+
+  /** @private */
+  _selectItem(item) {
+    if (!this._isItemChecked(item)) {
+      this.selectedItems = [...this.selectedItems, item];
+    }
+  }
+
+  _deselectItem(item) {
+    if (this._isItemChecked(item)) {
+      const itemIndex = this.selectedItems.findIndex(i => {
+        if (typeof item === 'string') {
+          return i === item;
+        } else {
+          return i[this.itemValuePath] === item[this.itemValuePath];
+        }
+      });
+
+      this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
     }
   }
 
