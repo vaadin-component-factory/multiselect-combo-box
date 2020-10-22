@@ -10,7 +10,6 @@ export function renderer(root, owner, model) {
   if (root.firstElementChild) {
     root.innerHTML = '';
   }
-  const itemNode = document.createElement('div');
   const itemCheckbox = document.createElement('vaadin-checkbox');
   itemCheckbox.checked = this._isItemChecked(model.item) ? true : false;
   itemCheckbox.addEventListener('change', () => {
@@ -20,9 +19,8 @@ export function renderer(root, owner, model) {
       this._deselectItem(model.item);
     }
   });
-  itemNode.appendChild(itemCheckbox);
-  itemNode.appendChild(document.createTextNode(labelText));
-  root.appendChild(itemNode);
+  itemCheckbox.textContent = labelText;
+  root.appendChild(itemCheckbox);
 }
 
 export function commitValue() {
