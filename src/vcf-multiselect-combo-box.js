@@ -194,8 +194,13 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       const clearButton = document.createElement('vaadin-button');
       clearButton.innerText = "Clear";
 
+
       selectAllButton.addEventListener('click', () => {
-        this.selectedItems = [...this.items];
+        if (this.items) {
+          this.selectedItems = [...this.items];
+        } else if (this.$server) {
+          this.$server.selectAll();
+        }
       });
 
       clearButton.addEventListener('click', () => {
