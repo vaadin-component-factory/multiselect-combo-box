@@ -91,7 +91,7 @@ export function onEnter(e) {
     (this.opened || this.autoOpenDisabled) &&
     (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
   ) {
-    const targetItem = this.items[this._focusedIndex];
+    const targetItem = this.filteredItems[this._focusedIndex];
     if (!this._isItemChecked(targetItem)) {
       this._selectItem(targetItem);
     } else {
