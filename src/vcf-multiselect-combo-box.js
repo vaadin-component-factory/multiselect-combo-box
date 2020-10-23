@@ -61,6 +61,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     // `value` property and showing the blue tick beside
     // the selected item.
     this._selectedItemChanged = () => {};
+    this._prefillFocusedItemLabel = () => {};
   }
 
   static get properties() {
@@ -126,6 +127,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     }
 
     this.render();
+    this._inputElementValue = '';
 
     const e = new CustomEvent('selected-items-changed', {
       detail: value,
