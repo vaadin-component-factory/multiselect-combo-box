@@ -70,6 +70,16 @@ export function commitValue() {
   if (!this.dataProvider) {
     this.filter = '';
   }
+
+  this._inputElementValue = this.selectedItems.reduce((prev, current) => {
+    let val = '';
+    if ((typeof current === 'string')) {
+      val = current;
+    } else {
+      val = current[this.itemLabelPath];
+    }
+    return `${val}${prev === '' ? '' : `, ${prev}`}`;
+  }, '');
 }
 
 export function overlaySelectedItemChanged(e) {
@@ -116,7 +126,11 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
   this.$.overlay.filterChanged = true;
 
   if (this.items) {
-    this.filteredItems = [...this.selectedItems, ...this._filterItems(this.items, filter)];
+    if (filter) {
+      this.filteredItems = [...this.selectedItems, ...this._filterItems(this.items, filter)];
+    } else {
+      this.filteredItems = this._filterItems(this.items, filter);
+    }
   } else {
     // With certain use cases (e. g., external filtering), `items` are
     // undefined. Filtering is unnecessary per se, but the filteredItems
