@@ -87,6 +87,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
       if (value) {
         this._addTopButtons();
+
+        this._inputElementValue = '';
       }
     }
   }
