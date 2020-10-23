@@ -101,16 +101,6 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   _selectedItemsChanged(value, oldValue) {
-    this._inputElementValue = value.reduce((prev, current) => {
-      let val = '';
-      if ((typeof current === 'string')) {
-        val = current;
-      } else {
-        val = current[this.itemLabelPath];
-      }
-      return `${val}${prev === '' ? '' : `, ${prev}`}`;
-    }, '');
-
     if (this.items) {
       this.items = this.items
         .sort((a, b) => {

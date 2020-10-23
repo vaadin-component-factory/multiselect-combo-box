@@ -70,6 +70,16 @@ export function commitValue() {
   if (!this.dataProvider) {
     this.filter = '';
   }
+
+  this._inputElementValue = this.selectedItems.reduce((prev, current) => {
+    let val = '';
+    if ((typeof current === 'string')) {
+      val = current;
+    } else {
+      val = current[this.itemLabelPath];
+    }
+    return `${val}${prev === '' ? '' : `, ${prev}`}`;
+  }, '');
 }
 
 export function overlaySelectedItemChanged(e) {
