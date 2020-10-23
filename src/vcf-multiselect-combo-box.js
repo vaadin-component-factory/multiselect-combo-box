@@ -13,7 +13,7 @@ import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
-import { commitValue, overlaySelectedItemChanged, renderer, onEnter } from './helpers';
+import { commitValue, overlaySelectedItemChanged, renderer, onEnter, filterChanged } from './helpers';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -56,23 +56,11 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
     this._boundRenderer = renderer.bind(this);
     this._boundOnEnter = onEnter.bind(this);
-  }
 
-  ready() {
-    super.ready();
-
-    this._commitValue = this._boundOverriddenCommitValue;
-    this.renderer = this._boundRenderer;
-    this._onEnter = this._boundOnEnter;
-
-    const boundOldOpenedChanged = this._openedChanged.bind(this);
-    this._openedChanged = (value, old) => {
-      boundOldOpenedChanged(value, old);
-
-      if (value) {
-        this._addTopButtons();
-      }
-    }
+    // This will prevent the component from setting the
+    // `value` property and showing the blue tick beside
+    // the selected item.
+    this._selectedItemChanged = () => {};
   }
 
   static get properties() {
@@ -85,21 +73,26 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     };
   }
 
-  static get is() {
-    return 'vcf-multiselect-combo-box';
-  }
+  ready() {
+    super.ready();
 
-  static get version() {
-    return '0.1.1';
+    this._commitValue = this._boundOverriddenCommitValue;
+    this.renderer = this._boundRenderer;
+    this._onEnter = this._boundOnEnter;
+    this._filterChanged = filterChanged.bind(this);
+
+    const boundOldOpenedChanged = this._openedChanged.bind(this);
+    this._openedChanged = (value, old) => {
+      boundOldOpenedChanged(value, old);
+
+      if (value) {
+        this._addTopButtons();
+      }
+    }
   }
 
   connectedCallback() {
     super.connectedCallback();
-
-    // This will prevent the component from setting the
-    // `value` property and showing the blue tick beside
-    // the selected item.
-    this._selectedItemChanged = () => {};
 
     this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
     this.$.overlay.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
@@ -228,6 +221,14 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     if (typeof licenseChecker === 'function') {
       licenseChecker(VcfMultiselectComboBox);
     }
+  }
+
+  static get is() {
+    return 'vcf-multiselect-combo-box';
+  }
+
+  static get version() {
+    return '0.1.1';
   }
 }
 

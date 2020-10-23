@@ -105,3 +105,22 @@ export function onEnter(e) {
     e.stopPropagation();
   }
 }
+
+export function filterChanged(filter, itemValuePath, itemLabelPath) {
+  if (filter === undefined) {
+    return;
+  }
+
+  // Notify the dropdown about filter changing, so to let it skip the
+  // scrolling restore
+  this.$.overlay.filterChanged = true;
+
+  if (this.items) {
+    this.filteredItems = [...this.selectedItems, ...this._filterItems(this.items, filter)];
+  } else {
+    // With certain use cases (e. g., external filtering), `items` are
+    // undefined. Filtering is unnecessary per se, but the filteredItems
+    // observer should still be invoked to update focused item.
+    this._filteredItemsChanged({path: 'filteredItems', value: this.filteredItems}, itemValuePath, itemLabelPath);
+  }
+}
