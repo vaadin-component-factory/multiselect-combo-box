@@ -1,6 +1,6 @@
 {
   "name": "@vaadin-component-factory/vcf-multiselect-combo-box",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A multiselect combobox",
   "main": "src/vcf-multiselect-combo-box.js",
   "author": "Vaadin Ltd",
