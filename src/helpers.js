@@ -39,12 +39,12 @@ export function commitValue() {
     }
   } else {
     if (
-      this.allowCustomValue &&
-      // to prevent a repetitive input value being saved after pressing ESC and Tab.
-      !(
-        this.filteredItems &&
-        this.filteredItems.filter(item => this._getItemLabel(item) === this._inputElementValue).length
-      )
+        this.allowCustomValue &&
+        // to prevent a repetitive input value being saved after pressing ESC and Tab.
+        !(
+            this.filteredItems &&
+            this.filteredItems.filter(item => this._getItemLabel(item) === this._inputElementValue).length
+        )
     ) {
       const e = new CustomEvent('custom-value-set', {
         detail: this._inputElementValue,
@@ -58,8 +58,6 @@ export function commitValue() {
         this._selectItemForValue(customValue);
         this.value = customValue;
       }
-    } else {
-      // this._inputElementValue = this.selectedItem ? this._getItemLabel(this.selectedItem) : (this.value || '');
     }
   }
 
@@ -70,6 +68,11 @@ export function commitValue() {
   if (!this.dataProvider) {
     this.filter = '';
   }
+
+  this.renderLabel();
+}
+
+export function renderLabel() {
 
   this._inputElementValue = this.selectedItems.reduce((prev, current) => {
     let val = '';
@@ -92,20 +95,24 @@ export function overlaySelectedItemChanged(e) {
     this.selectedItem = e.detail.item;
     this._detectAndDispatchChange();
   }
+  this.dispatchEvent(new CustomEvent('change', {bubbles: true}));
 }
 
 export function onEnter(e) {
   // should close on enter when custom values are allowed, input field is cleared, or when an existing
   // item is focused with keyboard. If auto open is disabled, under the same conditions, commit value.
   if (
-    (this.opened || this.autoOpenDisabled) &&
-    (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
+      (this.opened || this.autoOpenDisabled) &&
+      (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
   ) {
     const targetItem = this.filteredItems[this._focusedIndex];
-    if (!this._isItemChecked(targetItem)) {
-      this._selectItem(targetItem);
-    } else {
-      this._deselectItem(targetItem);
+
+    if (!(typeof targetItem === 'undefined')) {
+      if (!this._isItemChecked(targetItem)) {
+        this._selectItem(targetItem);
+      } else {
+        this._deselectItem(targetItem);
+      }
     }
 
     // Do not submit the surrounding form.
@@ -138,3 +145,32 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
     this._filteredItemsChanged({path: 'filteredItems', value: this.filteredItems}, itemValuePath, itemLabelPath);
   }
 }
+
+
+
+/**
+ * Change the default to focus on the first items not selected after filtering
+ * @param e
+ * @param itemValuePath
+ * @param itemLabelPath
+ * @private
+ */
+export function _filteredItemsChanged(e, itemValuePath, itemLabelPath) {
+  if (e.value === undefined) {
+    return;
+  }
+  if (e.path === 'filteredItems' || e.path === 'filteredItems.splices') {
+    this._setOverlayItems(this.filteredItems);
+
+    if (this.opened || this.autoOpenDisabled) {
+      this._focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+    } else {
+      this._focusedIndex = -1;
+    }
+
+    if (this.opened) {
+      this._repositionOverlay();
+    }
+  }
+}
+

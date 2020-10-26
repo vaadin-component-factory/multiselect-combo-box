@@ -6,14 +6,13 @@
  * See [the website]{@link https://vaadin.com/license/cval-3} for the complete license.
  */
 
-// import { html, PolymerElement } from '@polymer/polymer/polymer-element';
 import { ThemableMixin } from '@vaadin/vaadin-themable-mixin';
 import { ElementMixin } from '@vaadin/vaadin-element-mixin';
 import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
-import { commitValue, overlaySelectedItemChanged, renderer, onEnter, filterChanged } from './helpers';
+import { commitValue, overlaySelectedItemChanged, renderer, onEnter, _filteredItemsChanged, filterChanged, renderLabel } from './helpers.js';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -53,9 +52,11 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     super();
 
     this._boundOverriddenCommitValue = commitValue.bind(this);
+    this.renderLabel = renderLabel.bind(this);
     this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
     this._boundRenderer = renderer.bind(this);
     this._boundOnEnter = onEnter.bind(this);
+    this._filteredItemsChanged = _filteredItemsChanged.bind(this);
 
     // This will prevent the component from setting the
     // `value` property and showing the blue tick beside
@@ -104,30 +105,30 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   _selectedItemsChanged(value, oldValue) {
     if (this.items) {
       this.items = this.items
-        .sort((a, b) => {
-          if (typeof a === 'string') {
-            if (this.selectedItems.indexOf(a) > -1) {
-              return -1;
-            } else if (this.selectedItems.indexOf(b) > -1) {
-              return 1;
+          .sort((a, b) => {
+            if (typeof a === 'string') {
+              if (this.selectedItems.indexOf(a) > -1) {
+                return -1;
+              } else if (this.selectedItems.indexOf(b) > -1) {
+                return 1;
+              } else {
+                return 0;
+              }
             } else {
-              return 0;
+              if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+                return -1;
+              } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+                return 1;
+              } else {
+                return 0;
+              }
             }
-          } else {
-            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-              return -1;
-            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
-        })
-        .slice(0);
+          })
+          .slice(0);
     }
 
     this.render();
-    this._inputElementValue = '';
+    /*this._inputElementValue = '';*/
 
     const e = new CustomEvent('selected-items-changed', {
       detail: value,
@@ -174,12 +175,19 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       const topButtonsContainer = document.createElement('div');
       topButtonsContainer.id = 'top-buttons-container';
       topButtonsContainer.style.display = 'flex';
-      topButtonsContainer.style.flexDirection = 'column';
-      topButtonsContainer.style.padding = '0 .5em 0';
+      topButtonsContainer.style.flexDirection = 'row';
       const selectAllButton = document.createElement('vaadin-button');
       selectAllButton.innerText = "Select All";
+      selectAllButton.setAttribute("theme", "small");
+      selectAllButton.style.flexGrow = 1;
       const clearButton = document.createElement('vaadin-button');
+      clearButton.setAttribute("theme", "small");
       clearButton.innerText = "Clear";
+
+      const cancelButton = document.createElement('vaadin-button');
+      cancelButton.innerText = "Cancel";
+      cancelButton.setAttribute("theme", "small");
+      cancelButton.style.flexGrow = 1;
 
 
       selectAllButton.addEventListener('click', () => {
@@ -194,9 +202,18 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         this.selectedItems = [];
       });
 
-      topButtonsContainer.appendChild(selectAllButton);
-      topButtonsContainer.appendChild(clearButton);
+      cancelButton.addEventListener('click', () => {
+        if (this.$server) {
+          this.$server.cancelChanges();
+        }
+      });
 
+      topButtonsContainer.appendChild(selectAllButton);
+      if (this.$server) {
+        topButtonsContainer.appendChild(cancelButton);
+      } else {
+        topButtonsContainer.appendChild(clearButton);
+      }
       const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
       if (!targetNode.querySelector('#top-buttons-container')) {
         this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot.prepend(topButtonsContainer);
