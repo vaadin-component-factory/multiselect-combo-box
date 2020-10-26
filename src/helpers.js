@@ -39,12 +39,12 @@ export function commitValue() {
     }
   } else {
     if (
-        this.allowCustomValue &&
-        // to prevent a repetitive input value being saved after pressing ESC and Tab.
-        !(
-            this.filteredItems &&
-            this.filteredItems.filter(item => this._getItemLabel(item) === this._inputElementValue).length
-        )
+      this.allowCustomValue &&
+      // to prevent a repetitive input value being saved after pressing ESC and Tab.
+      !(
+        this.filteredItems &&
+        this.filteredItems.filter(item => this._getItemLabel(item) === this._inputElementValue).length
+      )
     ) {
       const e = new CustomEvent('custom-value-set', {
         detail: this._inputElementValue,
@@ -95,15 +95,15 @@ export function overlaySelectedItemChanged(e) {
     this.selectedItem = e.detail.item;
     this._detectAndDispatchChange();
   }
-  this.dispatchEvent(new CustomEvent('change', {bubbles: true}));
+  this.dispatchEvent(new CustomEvent('change', { bubbles: true }));
 }
 
 export function onEnter(e) {
   // should close on enter when custom values are allowed, input field is cleared, or when an existing
   // item is focused with keyboard. If auto open is disabled, under the same conditions, commit value.
   if (
-      (this.opened || this.autoOpenDisabled) &&
-      (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
+    (this.opened || this.autoOpenDisabled) &&
+    (this.allowCustomValue || this._inputElementValue === '' || this._focusedIndex > -1)
   ) {
     const targetItem = this.filteredItems[this._focusedIndex];
 
@@ -142,7 +142,7 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
     // With certain use cases (e. g., external filtering), `items` are
     // undefined. Filtering is unnecessary per se, but the filteredItems
     // observer should still be invoked to update focused item.
-    this._filteredItemsChanged({path: 'filteredItems', value: this.filteredItems}, itemValuePath, itemLabelPath);
+    this._filteredItemsChanged({ path: 'filteredItems', value: this.filteredItems }, itemValuePath, itemLabelPath);
   }
 }
 

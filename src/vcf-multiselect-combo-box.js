@@ -61,8 +61,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     // This will prevent the component from setting the
     // `value` property and showing the blue tick beside
     // the selected item.
-    this._selectedItemChanged = () => {};
-    this._prefillFocusedItemLabel = () => {};
+    this._selectedItemChanged = () => { };
+    this._prefillFocusedItemLabel = () => { };
   }
 
   static get properties() {
@@ -105,26 +105,26 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   _selectedItemsChanged(value, oldValue) {
     if (this.items) {
       this.items = this.items
-          .sort((a, b) => {
-            if (typeof a === 'string') {
-              if (this.selectedItems.indexOf(a) > -1) {
-                return -1;
-              } else if (this.selectedItems.indexOf(b) > -1) {
-                return 1;
-              } else {
-                return 0;
-              }
+        .sort((a, b) => {
+          if (typeof a === 'string') {
+            if (this.selectedItems.indexOf(a) > -1) {
+              return -1;
+            } else if (this.selectedItems.indexOf(b) > -1) {
+              return 1;
             } else {
-              if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-                return -1;
-              } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-                return 1;
-              } else {
-                return 0;
-              }
+              return 0;
             }
-          })
-          .slice(0);
+          } else {
+            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+              return -1;
+            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        })
+        .slice(0);
     }
 
     this.render();
