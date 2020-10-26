@@ -12,7 +12,7 @@ import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
-import { commitValue, overlaySelectedItemChanged, renderer, onEnter, _filteredItemsChanged, filterChanged, renderLabel } from './helpers.js';
+import { commitValue, overlaySelectedItemChanged, renderer, onEnter, _filteredItemsChanged, filterChanged, renderLabel } from './helpers';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -128,7 +128,6 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     }
 
     this.render();
-    /*this._inputElementValue = '';*/
 
     const e = new CustomEvent('selected-items-changed', {
       detail: value,
