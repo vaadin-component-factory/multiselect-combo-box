@@ -182,11 +182,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       const clearButton = document.createElement('vaadin-button');
       clearButton.setAttribute("theme", "small");
       clearButton.innerText = "Clear";
-
-      const cancelButton = document.createElement('vaadin-button');
-      cancelButton.innerText = "Cancel";
-      cancelButton.setAttribute("theme", "small");
-      cancelButton.style.flexGrow = 1;
+      clearButton.style.flexGrow = 1;
 
 
       selectAllButton.addEventListener('click', () => {
@@ -201,18 +197,10 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         this.selectedItems = [];
       });
 
-      cancelButton.addEventListener('click', () => {
-        if (this.$server) {
-          this.$server.cancelChanges();
-        }
-      });
 
       topButtonsContainer.appendChild(selectAllButton);
-      if (this.$server) {
-        topButtonsContainer.appendChild(cancelButton);
-      } else {
-        topButtonsContainer.appendChild(clearButton);
-      }
+      topButtonsContainer.appendChild(clearButton);
+
       const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
       if (!targetNode.querySelector('#top-buttons-container')) {
         this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot.prepend(topButtonsContainer);
