@@ -204,6 +204,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
       if (!targetNode.querySelector('#top-buttons-container')) {
         this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot.prepend(topButtonsContainer);
+        this.$.overlay.$.dropdown.$.overlay.$.overlay.style.overflow = 'hidden';
       }
     }
   }
