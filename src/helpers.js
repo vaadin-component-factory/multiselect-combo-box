@@ -174,3 +174,24 @@ export function _filteredItemsChanged(e, itemValuePath, itemLabelPath) {
   }
 }
 
+export function setOverlayHeight() {
+  if (!this.opened || !this.positionTarget || !this._selector) {
+    return;
+  }
+
+  const targetRect = this.positionTarget.getBoundingClientRect();
+
+  this._scroller.style.maxHeight = (window.ShadyCSS ?
+    window.ShadyCSS.getComputedStyleValue(this, '--vaadin-combo-box-overlay-max-height') :
+    getComputedStyle(this).getPropertyValue('--vaadin-combo-box-overlay-max-height')) || '41vh';
+
+  const maxHeight = this._maxOverlayHeight(targetRect);
+
+  // overlay max height is restrained by the #scroller max height which is set to 65vh in CSS.
+  this.$.dropdown.$.overlay.style.maxHeight = maxHeight;
+
+  // we need to set height for iron-list to make its `firstVisibleIndex` work correctly.
+  this._selector.style.maxHeight = maxHeight;
+
+  this.updateViewportBoundaries();
+}

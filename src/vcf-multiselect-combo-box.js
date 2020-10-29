@@ -12,7 +12,16 @@ import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
 
-import { commitValue, overlaySelectedItemChanged, renderer, onEnter, _filteredItemsChanged, filterChanged, renderLabel } from './helpers';
+import {
+  commitValue,
+  overlaySelectedItemChanged,
+  renderer,
+  onEnter,
+  _filteredItemsChanged,
+  filterChanged,
+  renderLabel,
+  setOverlayHeight
+} from './helpers';
 
 /**
  * `<vcf-multiselect-combo-box>` A multiselect combobox
@@ -100,6 +109,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
     this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
     this.$.overlay.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
+    this.$.overlay._setOverlayHeight = setOverlayHeight.bind(this.$.overlay);
   }
 
   _selectedItemsChanged(value, oldValue) {
@@ -203,7 +213,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
       const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
       if (!targetNode.querySelector('#top-buttons-container')) {
-        this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot.prepend(topButtonsContainer);
+        targetNode.prepend(topButtonsContainer);
       }
     }
   }
