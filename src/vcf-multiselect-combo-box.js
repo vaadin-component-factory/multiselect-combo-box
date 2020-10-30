@@ -101,6 +101,16 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
         this._inputElementValue = '';
       }
+      if (!this.opened) {
+        debugger;
+        const e = new CustomEvent('on-close', {
+          detail: value,
+          composed: true,
+          cancelable: false,
+          bubbles: true
+        });
+        this.dispatchEvent(e);
+      }
     }
   }
 
@@ -115,26 +125,26 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   _selectedItemsChanged(value, oldValue) {
     if (this.items) {
       this.items = this.items
-        .sort((a, b) => {
-          if (typeof a === 'string') {
-            if (this.selectedItems.indexOf(a) > -1) {
-              return -1;
-            } else if (this.selectedItems.indexOf(b) > -1) {
-              return 1;
+          .sort((a, b) => {
+            if (typeof a === 'string') {
+              if (this.selectedItems.indexOf(a) > -1) {
+                return -1;
+              } else if (this.selectedItems.indexOf(b) > -1) {
+                return 1;
+              } else {
+                return 0;
+              }
             } else {
-              return 0;
+              if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+                return -1;
+              } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+                return 1;
+              } else {
+                return 0;
+              }
             }
-          } else {
-            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-              return -1;
-            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
-        })
-        .slice(0);
+          })
+          .slice(0);
     }
 
     this.render();
@@ -198,6 +208,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       selectAllButton.addEventListener('click', () => {
         if (this.items) {
           this.selectedItems = [...this.items];
+        } else if (this.filteredItems) {
+          this.selectedItems = [...this.filteredItems];
         } else if (this.$server) {
           this.$server.selectAll();
         }
@@ -236,7 +248,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   static get version() {
-    return '0.1.5';
+    return '0.1.6';
   }
 }
 
