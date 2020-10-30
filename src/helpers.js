@@ -97,15 +97,15 @@ export function onEnter(e) {
         this._deselectItem(targetItem);
       }
 
-      // refresh all checkboxes visible (the other will be sync)
-      Array.from(this.$.overlay._selector.children).forEach(function(item) {
-        if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM' && item.item === targetItem) {
-          item.selected = !previousSelection;
-        }
-      });
+      // refresh the checkbox
+      const foundItem = Array.from(this.$.overlay._selector.children).find(
+        item => item.nodeName === 'VAADIN-COMBO-BOX-ITEM' && item.item === targetItem
+      );
+      if (foundItem) {
+        foundItem.selected = !previousSelection;
+      }
     }
 
-    // this.$.overlay._selector.
     // Do not submit the surrounding form.
     e.preventDefault();
 
