@@ -11,11 +11,11 @@ import { ElementMixin } from '@vaadin/vaadin-element-mixin';
 import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
 import '@vaadin/vaadin-license-checker/vaadin-license-checker';
 import '@vaadin/vaadin-checkbox/vaadin-checkbox';
+import { ComboBoxPlaceholder } from '@vaadin/vaadin-combo-box/src/vaadin-combo-box-placeholder.js';
 
 import {
   commitValue,
   overlaySelectedItemChanged,
-  renderer,
   onEnter,
   _filteredItemsChanged,
   filterChanged,
@@ -56,22 +56,20 @@ import {
  * @demo demo/index.html
  */
 class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)) {
-
   constructor() {
     super();
 
     this._boundOverriddenCommitValue = commitValue.bind(this);
     this.renderLabel = renderLabel.bind(this);
     this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
-    this._boundRenderer = renderer.bind(this);
     this._boundOnEnter = onEnter.bind(this);
     this._filteredItemsChanged = _filteredItemsChanged.bind(this);
 
     // This will prevent the component from setting the
     // `value` property and showing the blue tick beside
     // the selected item.
-    this._selectedItemChanged = () => { };
-    this._prefillFocusedItemLabel = () => { };
+    this._selectedItemChanged = () => {};
+    this._prefillFocusedItemLabel = () => {};
   }
 
   static get properties() {
@@ -88,8 +86,9 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     super.ready();
 
     this._commitValue = this._boundOverriddenCommitValue;
-    this.renderer = this._boundRenderer;
     this._onEnter = this._boundOnEnter;
+    this._filterChanged = filterChanged.bind(this);
+
     this._filterChanged = filterChanged.bind(this);
 
     const boundOldOpenedChanged = this._openedChanged.bind(this);
@@ -101,8 +100,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
 
         this._inputElementValue = '';
       }
+
       if (!this.opened) {
-        debugger;
         const e = new CustomEvent('on-close', {
           detail: value,
           composed: true,
@@ -111,7 +110,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         });
         this.dispatchEvent(e);
       }
-    }
+    };
   }
 
   connectedCallback() {
@@ -120,31 +119,48 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
     this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
     this.$.overlay.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
     this.$.overlay._setOverlayHeight = setOverlayHeight.bind(this.$.overlay);
+
+    this.$.overlay._isItemSelected = (item, selectedItem, itemIdPath) => {
+      if (item instanceof ComboBoxPlaceholder) {
+        return false;
+      } else {
+        return this._isItemChecked(item);
+      }
+    };
+
+    this.$.overlay._onItemClick = e => {
+      if (e.detail && e.detail.sourceEvent && e.detail.sourceEvent.stopPropagation) {
+        this._stopPropagation(e.detail.sourceEvent);
+      }
+      e.model.children[1].selected = !e.model.children[1].selected;
+
+      this.$.overlay.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
+    };
   }
 
   _selectedItemsChanged(value, oldValue) {
     if (this.items) {
       this.items = this.items
-          .sort((a, b) => {
-            if (typeof a === 'string') {
-              if (this.selectedItems.indexOf(a) > -1) {
-                return -1;
-              } else if (this.selectedItems.indexOf(b) > -1) {
-                return 1;
-              } else {
-                return 0;
-              }
+        .sort((a, b) => {
+          if (typeof a === 'string') {
+            if (this.selectedItems.indexOf(a) > -1) {
+              return -1;
+            } else if (this.selectedItems.indexOf(b) > -1) {
+              return 1;
             } else {
-              if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-                return -1;
-              } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-                return 1;
-              } else {
-                return 0;
-              }
+              return 0;
             }
-          })
-          .slice(0);
+          } else {
+            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
+              return -1;
+            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        })
+        .slice(0);
     }
 
     this.render();
@@ -196,29 +212,37 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       topButtonsContainer.style.display = 'flex';
       topButtonsContainer.style.flexDirection = 'row';
       const selectAllButton = document.createElement('vaadin-button');
-      selectAllButton.innerText = "Select All";
-      selectAllButton.setAttribute("theme", "small");
+      selectAllButton.innerText = 'Select All';
+      selectAllButton.setAttribute('theme', 'small');
       selectAllButton.style.flexGrow = 1;
       const clearButton = document.createElement('vaadin-button');
-      clearButton.setAttribute("theme", "small");
-      clearButton.innerText = "Clear";
+      clearButton.setAttribute('theme', 'small');
+      clearButton.innerText = 'Clear';
       clearButton.style.flexGrow = 1;
-
 
       selectAllButton.addEventListener('click', () => {
         if (this.items) {
           this.selectedItems = [...this.items];
-        } else if (this.filteredItems) {
-          this.selectedItems = [...this.filteredItems];
         } else if (this.$server) {
           this.$server.selectAll();
         }
+        // refresh all checkboxes visible (the other will be sync)
+        Array.from(this.$.overlay._selector.children).forEach(function(item) {
+          if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM') {
+            item.selected = true;
+          }
+        });
       });
 
       clearButton.addEventListener('click', () => {
         this.selectedItems = [];
+        // refresh all checkboxes visible (the other will be sync)
+        Array.from(this.$.overlay._selector.children).forEach(function(item) {
+          if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM') {
+            item.selected = false;
+          }
+        });
       });
-
 
       topButtonsContainer.appendChild(selectAllButton);
       topButtonsContainer.appendChild(clearButton);
@@ -248,7 +272,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   static get version() {
-    return '0.1.6';
+    return '0.2.0';
   }
 }
 

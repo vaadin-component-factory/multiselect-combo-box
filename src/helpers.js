@@ -1,28 +1,5 @@
 /* eslint-disable no-invalid-this */
 
-export function renderer(root, owner, model) {
-  let labelText = '';
-  if (!(typeof model.item === 'string')) {
-    labelText = model.item[this.itemLabelPath];
-  } else {
-    labelText = model.item;
-  }
-  if (root.firstElementChild) {
-    root.innerHTML = '';
-  }
-  const itemCheckbox = document.createElement('vaadin-checkbox');
-  itemCheckbox.checked = this._isItemChecked(model.item) ? true : false;
-  itemCheckbox.addEventListener('change', () => {
-    if (itemCheckbox.checked) {
-      this._selectItem(model.item);
-    } else {
-      this._deselectItem(model.item);
-    }
-  });
-  itemCheckbox.textContent = labelText;
-  root.appendChild(itemCheckbox);
-}
-
 export function commitValue() {
   if (this.$.overlay._items && this._focusedIndex > -1) {
     const focusedItem = this.$.overlay._items[this._focusedIndex];
@@ -73,10 +50,9 @@ export function commitValue() {
 }
 
 export function renderLabel() {
-
   this._inputElementValue = this.selectedItems.reduce((prev, current) => {
     let val = '';
-    if ((typeof current === 'string')) {
+    if (typeof current === 'string') {
       val = current;
     } else {
       val = current[this.itemLabelPath];
@@ -88,6 +64,12 @@ export function renderLabel() {
 export function overlaySelectedItemChanged(e) {
   // stop this private event from leaking outside.
   e.stopPropagation();
+  /** handle the selection **/
+  if (!this._isItemChecked(e.detail.item)) {
+    this._selectItem(e.detail.item);
+  } else {
+    this._deselectItem(e.detail.item);
+  }
 
   if (this.opened) {
     this._focusedIndex = this.filteredItems.indexOf(e.detail.item);
@@ -108,13 +90,22 @@ export function onEnter(e) {
     const targetItem = this.filteredItems[this._focusedIndex];
 
     if (!(typeof targetItem === 'undefined')) {
-      if (!this._isItemChecked(targetItem)) {
+      const previousSelection = this._isItemChecked(targetItem);
+      if (!previousSelection) {
         this._selectItem(targetItem);
       } else {
         this._deselectItem(targetItem);
       }
+
+      // refresh all checkboxes visible (the other will be sync)
+      Array.from(this.$.overlay._selector.children).forEach(function(item) {
+        if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM' && item.item === targetItem) {
+          item.selected = !previousSelection;
+        }
+      });
     }
 
+    // this.$.overlay._selector.
     // Do not submit the surrounding form.
     e.preventDefault();
 
@@ -145,8 +136,6 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
     this._filteredItemsChanged({ path: 'filteredItems', value: this.filteredItems }, itemValuePath, itemLabelPath);
   }
 }
-
-
 
 /**
  * Change the default to focus on the first items not selected after filtering
@@ -181,9 +170,10 @@ export function setOverlayHeight() {
 
   const targetRect = this.positionTarget.getBoundingClientRect();
 
-  this._scroller.style.maxHeight = (window.ShadyCSS ?
-    window.ShadyCSS.getComputedStyleValue(this, '--vaadin-combo-box-overlay-max-height') :
-    getComputedStyle(this).getPropertyValue('--vaadin-combo-box-overlay-max-height')) || '41vh';
+  this._scroller.style.maxHeight =
+    (window.ShadyCSS
+      ? window.ShadyCSS.getComputedStyleValue(this, '--vaadin-combo-box-overlay-max-height')
+      : getComputedStyle(this).getPropertyValue('--vaadin-combo-box-overlay-max-height')) || '41vh';
 
   const maxHeight = this._maxOverlayHeight(targetRect);
 
