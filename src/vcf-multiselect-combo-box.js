@@ -273,7 +273,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   static get version() {
-    return '0.2.0';
+    return '0.4.0';
   }
 }
 
