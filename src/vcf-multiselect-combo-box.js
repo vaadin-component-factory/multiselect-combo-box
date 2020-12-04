@@ -77,6 +77,21 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         type: Array,
         value: () => [],
         observer: '_selectedItemsChanged'
+      },
+      /**
+       * The object used to localize this component.
+       * For changing the default localization, change the entire
+       * _i18n_ object or just the property you want to modify.
+       **/
+
+      i18n: {
+        type: Object,
+        value: function() {
+          return {
+            select: 'Select All',
+            clear: 'Clear'
+          };
+        }
       }
     };
   }
@@ -211,12 +226,12 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       topButtonsContainer.style.display = 'flex';
       topButtonsContainer.style.flexDirection = 'row';
       const selectAllButton = document.createElement('vaadin-button');
-      selectAllButton.innerText = 'Select All';
+      selectAllButton.innerText = this.i18n.select;
       selectAllButton.setAttribute('theme', 'small');
       selectAllButton.style.flexGrow = 1;
       const clearButton = document.createElement('vaadin-button');
       clearButton.setAttribute('theme', 'small');
-      clearButton.innerText = 'Clear';
+      clearButton.innerText = this.i18n.clear;
       clearButton.style.flexGrow = 1;
 
       selectAllButton.addEventListener('click', () => {
