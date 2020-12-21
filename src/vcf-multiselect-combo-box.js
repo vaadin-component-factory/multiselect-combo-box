@@ -229,10 +229,15 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       selectAllButton.innerText = this.i18n.select;
       selectAllButton.setAttribute('theme', 'small');
       selectAllButton.style.flexGrow = 1;
+      selectAllButton.style.flexBasis = 0;
+      selectAllButton.style.marginRight = 'var(--lumo-space-xs)';
+      selectAllButton.style.marginLeft = 'var(--lumo-space-xs)';
       const clearButton = document.createElement('vaadin-button');
       clearButton.setAttribute('theme', 'small');
       clearButton.innerText = this.i18n.clear;
       clearButton.style.flexGrow = 1;
+      clearButton.style.flexBasis = 0;
+      clearButton.style.marginRight = 'var(--lumo-space-xs)';
 
       selectAllButton.addEventListener('click', () => {
         if (this.items) {
