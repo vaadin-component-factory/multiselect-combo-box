@@ -1,16 +1,8 @@
-/**
- * @license
- * Copyright (C) 2015 Vaadin Ltd.
- * This program is available under Commercial Vaadin Add-On License 3.0 (CVALv3).
- * See the file LICENSE.md distributed with this software for more information about licensing.
- * See [the website]{@link https://vaadin.com/license/cval-3} for the complete license.
- */
-
 import { ThemableMixin } from '@vaadin/vaadin-themable-mixin';
-import { ElementMixin } from '@vaadin/vaadin-element-mixin';
-import { ComboBoxElement } from '@vaadin/vaadin-combo-box';
-import '@vaadin/vaadin-checkbox/vaadin-checkbox';
-import { ComboBoxPlaceholder } from '@vaadin/vaadin-combo-box/src/vaadin-combo-box-placeholder.js';
+import { ElementMixin } from '@vaadin/component-base';
+import { ComboBox } from '@vaadin/combo-box';
+import '@vaadin/checkbox/vaadin-checkbox';
+import { ComboBoxPlaceholder } from '@vaadin/combo-box/src/vaadin-combo-box-placeholder.js';
 
 import {
   commitValue,
@@ -54,7 +46,7 @@ import {
  * @mixes ThemableMixin
  * @demo demo/index.html
  */
-class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)) {
+class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   constructor() {
     super();
 
@@ -130,11 +122,11 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   connectedCallback() {
     super.connectedCallback();
 
-    this.$.overlay.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
-    this.$.overlay.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
-    this.$.overlay._setOverlayHeight = setOverlayHeight.bind(this.$.overlay);
+    this.$.dropdown.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
+    this.$.dropdown.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
+    this.$.dropdown._setOverlayHeight = setOverlayHeight.bind(this.$.dropdown);
 
-    this.$.overlay._isItemSelected = (item, selectedItem, itemIdPath) => {
+    this.$.dropdown._isItemSelected = (item, selectedItem, itemIdPath) => {
       if (item instanceof ComboBoxPlaceholder) {
         return false;
       } else {
@@ -142,14 +134,27 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       }
     };
 
-    this.$.overlay._onItemClick = e => {
+    this.$.dropdown._scroller.__boundOnItemClick = this.__onItemClick.bind(this.$.dropdown._scroller);
+    /*    debugger;
+    this.$.dropdown._scroller.__onItemClick = e => {
+      debugger;
       if (e.detail && e.detail.sourceEvent && e.detail.sourceEvent.stopPropagation) {
         this._stopPropagation(e.detail.sourceEvent);
       }
       e.model.children[1].selected = !e.model.children[1].selected;
 
-      this.$.overlay.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
-    };
+      this.$.dropdown.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
+    };*/
+  }
+
+  __onItemClick(e) {
+    // debugger;
+    if (e.detail && e.detail.sourceEvent && e.detail.sourceEvent.stopPropagation) {
+      this._stopPropagation(e.detail.sourceEvent);
+    }
+    e.model.children[1].selected = !e.model.children[1].selected;
+
+    this.$.dropdown.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
   }
 
   _selectedItemsChanged(value, oldValue) {
@@ -177,7 +182,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
         .slice(0);
     }
 
-    this.render();
+    // todo jcg this render()
+    this.requestContentUpdate();
 
     const e = new CustomEvent('selected-items-changed', {
       detail: value,
@@ -246,7 +252,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
           this.$server.selectAll();
         }
         // refresh all checkboxes visible (the other will be sync)
-        Array.from(this.$.overlay._selector.children).forEach(function(item) {
+        Array.from(this.$.dropdown._scroller.children).forEach(function(item) {
           if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM') {
             item.selected = true;
           }
@@ -256,7 +262,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       clearButton.addEventListener('click', () => {
         this.selectedItems = [];
         // refresh all checkboxes visible (the other will be sync)
-        Array.from(this.$.overlay._selector.children).forEach(function(item) {
+        Array.from(this.$.dropdown._scroller.children).forEach(function(item) {
           if (item.nodeName === 'VAADIN-COMBO-BOX-ITEM') {
             item.selected = false;
           }
@@ -266,7 +272,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
       topButtonsContainer.appendChild(selectAllButton);
       topButtonsContainer.appendChild(clearButton);
 
-      const targetNode = this.$.overlay.$.dropdown.$.overlay.$.content.shadowRoot;
+      // todo jcg check how I can access this
+      const targetNode = this.$.dropdown.$.overlay.shadowRoot.querySelector('[part~="content"]');
       if (!targetNode.querySelector('#top-buttons-container')) {
         targetNode.prepend(topButtonsContainer);
       }
@@ -278,7 +285,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBoxElement)
   }
 
   static get version() {
-    return '0.5.0';
+    return '1.0.0';
   }
 }
 

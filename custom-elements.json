@@ -1,0 +1,320 @@
+{
+  "version": "experimental",
+  "tags": [
+    {
+      "name": "vcf-multiselect-combo-box",
+      "path": "./src/vcf-multiselect-combo-box.js",
+      "description": "`<vcf-multiselect-combo-box>` A multiselect combobox\r\n\r\n```html\r\n<vcf-multiselect-combo-box></vcf-multiselect-combo-box>\r\n```\r\n\r\n### Styling\r\n\r\nThe following custom properties are available for styling:\r\n\r\nCustom property | Description | Default\r\n----------------|-------------|-------------\r\n`--vcf-multiselect-combo-box-property` | Example custom property | `unset`\r\n\r\nThe following shadow DOM parts are available for styling:\r\n\r\nPart name | Description\r\n----------------|----------------\r\n`part` | Example part\r\n\r\nThe following state attributes are available for styling:\r\n\r\nAttribute    | Description | Part name\r\n-------------|-------------|------------\r\n`attribute` | Example styling attribute | :host",
+      "attributes": [
+        {
+          "name": "selectedItems",
+          "type": "array"
+        },
+        {
+          "name": "i18n",
+          "description": "The object used to localize this component.\r\nFor changing the default localization, change the entire\r\n_i18n_ object or just the property you want to modify.",
+          "type": "object"
+        },
+        {
+          "name": "helper-text",
+          "description": "String used for the helper text.",
+          "type": "string"
+        },
+        {
+          "name": "error-message",
+          "description": "Error message to show when the field is invalid.",
+          "type": "string"
+        },
+        {
+          "name": "clear-button-visible",
+          "description": "Set to true to display the clear icon which clears the input.",
+          "type": "boolean"
+        },
+        {
+          "name": "prevent-invalid-input",
+          "description": "When set to true, user is prevented from typing a value that\nconflicts with the given `pattern`.",
+          "type": "boolean"
+        },
+        {
+          "name": "auto-open-disabled",
+          "description": "Set true to prevent the overlay from opening automatically.",
+          "type": "boolean"
+        },
+        {
+          "name": "allow-custom-value",
+          "description": "If `true`, the user can input a value that is not present in the items list.\n`value` property will be set to the input value in this case.\nAlso, when `value` is set programmatically, the input value will be set\nto reflect that value.",
+          "type": "boolean"
+        },
+        {
+          "name": "item-label-path",
+          "description": "Path for label of the item. If `items` is an array of objects, the\n`itemLabelPath` is used to fetch the displayed string label for each\nitem.\n\nThe item label is also used for matching items when processing user\ninput, i.e., for filtering and selecting items.",
+          "type": "string"
+        },
+        {
+          "name": "item-value-path",
+          "description": "Path for the value of the item. If `items` is an array of objects, the\n`itemValuePath:` is used to fetch the string value for the selected\nitem.\n\nThe item value is used in the `value` property of the combo box,\nto provide the form value.",
+          "type": "string"
+        },
+        {
+          "name": "item-id-path",
+          "description": "Path for the id of the item. If `items` is an array of objects,\nthe `itemIdPath` is used to compare and identify the same item\nin `selectedItem` and `filteredItems` (items given by the\n`dataProvider` callback).",
+          "type": "string"
+        },
+        {
+          "name": "page-size",
+          "description": "Number of items fetched at a time from the dataprovider.",
+          "type": "number"
+        }
+      ],
+      "properties": [
+        {
+          "name": "selectedItems",
+          "attribute": "selectedItems",
+          "type": "array"
+        },
+        {
+          "name": "i18n",
+          "attribute": "i18n",
+          "description": "The object used to localize this component.\r\nFor changing the default localization, change the entire\r\n_i18n_ object or just the property you want to modify.",
+          "type": "object"
+        },
+        {
+          "name": "renderLabel"
+        },
+        {
+          "name": "theme",
+          "description": "Helper property with theme attribute value facilitating propagation\nin shadow DOM.\n\nEnables the component implementation to propagate the `theme`\nattribute value to the sub-components in Shadow DOM by binding\nthe sub-component’s \"theme\" attribute to the `theme` property of\nthe host.\n\n**NOTE:** Extending the mixin only provides the property for binding,\nand does not make the propagation alone.\n\nSee [Styling Components: Sub-components](https://vaadin.com/docs/latest/ds/customization/styling-components/#sub-components).\npage for more information.",
+          "type": "string | null | undefined"
+        },
+        {
+          "name": "version",
+          "type": "string"
+        },
+        {
+          "name": "autofocus",
+          "description": "Specify that this control should have input focus when the page loads.",
+          "type": "boolean"
+        },
+        {
+          "name": "focusElement",
+          "description": "A reference to the focusable element controlled by the mixin.\nIt can be an input, textarea, button or any element with tabindex > -1.\n\nAny component implementing this mixin is expected to provide it\nby using `this._setFocusElement(input)` Polymer API.",
+          "type": "HTMLElement | null | undefined"
+        },
+        {
+          "name": "stateTarget",
+          "description": "A target element to which attributes and properties are delegated.",
+          "type": "HTMLElement | null"
+        },
+        {
+          "name": "disabled",
+          "description": "If true, the user cannot interact with this element.",
+          "type": "boolean"
+        },
+        {
+          "name": "ariaTarget",
+          "description": "A target element to which ARIA attributes are set.",
+          "type": "HTMLElement"
+        },
+        {
+          "name": "helperText",
+          "attribute": "helper-text",
+          "description": "String used for the helper text.",
+          "type": "string"
+        },
+        {
+          "name": "errorMessage",
+          "attribute": "error-message",
+          "description": "Error message to show when the field is invalid.",
+          "type": "string"
+        },
+        {
+          "name": "autoselect",
+          "description": "If true, the input text gets fully selected when the field is focused using click or touch / tap.",
+          "type": "boolean"
+        },
+        {
+          "name": "clearButtonVisible",
+          "attribute": "clear-button-visible",
+          "description": "Set to true to display the clear icon which clears the input.",
+          "type": "boolean"
+        },
+        {
+          "name": "name",
+          "description": "The name of this field.",
+          "type": "string"
+        },
+        {
+          "name": "placeholder",
+          "description": "A hint to the user of what can be entered in the field.",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "description": "The text usually displayed in a tooltip popup when the mouse is over the field.",
+          "type": "string"
+        },
+        {
+          "name": "inputElement",
+          "description": "A reference to the input element controlled by the mixin.\nAny component implementing this mixin is expected to provide it\nby using `this._setInputElement(input)` Polymer API.\n\nA typical case is using `InputController` that does this automatically.\nHowever, the input element does not have to always be native <input>:\nas an example, <vaadin-combo-box-light> accepts other components.",
+          "type": "HTMLElement"
+        },
+        {
+          "name": "label",
+          "description": "String used for a label element.",
+          "type": "string | null | undefined"
+        },
+        {
+          "name": "pattern",
+          "description": "A regular expression that the value is checked against.\nThe pattern must match the entire value, not just some subset.",
+          "type": "string"
+        },
+        {
+          "name": "preventInvalidInput",
+          "attribute": "prevent-invalid-input",
+          "description": "When set to true, user is prevented from typing a value that\nconflicts with the given `pattern`.",
+          "type": "boolean"
+        },
+        {
+          "name": "required",
+          "description": "Specifies that the user must fill in a value.",
+          "type": "boolean"
+        },
+        {
+          "name": "opened",
+          "description": "True if the dropdown is open, false otherwise.",
+          "type": "boolean"
+        },
+        {
+          "name": "autoOpenDisabled",
+          "attribute": "auto-open-disabled",
+          "description": "Set true to prevent the overlay from opening automatically.",
+          "type": "boolean"
+        },
+        {
+          "name": "readonly",
+          "description": "When present, it specifies that the field is read-only.",
+          "type": "boolean"
+        },
+        {
+          "name": "renderer",
+          "description": "Custom function for rendering the content of every item.\nReceives three arguments:\n\n- `root` The `<vaadin-combo-box-item>` internal container DOM element.\n- `comboBox` The reference to the `<vaadin-combo-box>` element.\n- `model` The object with the properties related with the rendered\n   item, contains:\n   - `model.index` The index of the rendered item.\n   - `model.item` The item.",
+          "type": "ComboBoxRenderer<TItem> | null | undefined"
+        },
+        {
+          "name": "items",
+          "description": "A full set of items to filter the visible options from.\nThe items can be of either `String` or `Object` type.",
+          "type": "TItem[] | undefined"
+        },
+        {
+          "name": "allowCustomValue",
+          "attribute": "allow-custom-value",
+          "description": "If `true`, the user can input a value that is not present in the items list.\n`value` property will be set to the input value in this case.\nAlso, when `value` is set programmatically, the input value will be set\nto reflect that value.",
+          "type": "boolean"
+        },
+        {
+          "name": "filteredItems",
+          "description": "A subset of items, filtered based on the user input. Filtered items\ncan be assigned directly to omit the internal filtering functionality.\nThe items can be of either `String` or `Object` type.",
+          "type": "TItem[] | undefined"
+        },
+        {
+          "name": "value",
+          "description": "The value of the field.",
+          "type": "string"
+        },
+        {
+          "name": "loading",
+          "description": "When set to `true`, \"loading\" attribute is added to host and the overlay element.",
+          "type": "boolean"
+        },
+        {
+          "name": "filter",
+          "description": "Filtering string the user has typed into the input field.",
+          "type": "string"
+        },
+        {
+          "name": "selectedItem",
+          "description": "The selected item from the `items` array.",
+          "type": "TItem | null | undefined"
+        },
+        {
+          "name": "itemLabelPath",
+          "attribute": "item-label-path",
+          "description": "Path for label of the item. If `items` is an array of objects, the\n`itemLabelPath` is used to fetch the displayed string label for each\nitem.\n\nThe item label is also used for matching items when processing user\ninput, i.e., for filtering and selecting items.",
+          "type": "string"
+        },
+        {
+          "name": "itemValuePath",
+          "attribute": "item-value-path",
+          "description": "Path for the value of the item. If `items` is an array of objects, the\n`itemValuePath:` is used to fetch the string value for the selected\nitem.\n\nThe item value is used in the `value` property of the combo box,\nto provide the form value.",
+          "type": "string"
+        },
+        {
+          "name": "itemIdPath",
+          "attribute": "item-id-path",
+          "description": "Path for the id of the item. If `items` is an array of objects,\nthe `itemIdPath` is used to compare and identify the same item\nin `selectedItem` and `filteredItems` (items given by the\n`dataProvider` callback).",
+          "type": "string"
+        },
+        {
+          "name": "invalid",
+          "description": "Set to true when the field is invalid.",
+          "type": "boolean"
+        },
+        {
+          "name": "pageSize",
+          "attribute": "page-size",
+          "description": "Number of items fetched at a time from the dataprovider.",
+          "type": "number"
+        },
+        {
+          "name": "size",
+          "description": "Total number of items.",
+          "type": "number | undefined"
+        },
+        {
+          "name": "dataProvider",
+          "description": "Function that provides items lazily. Receives arguments `params`, `callback`\n\n`params.page` Requested page index\n\n`params.pageSize` Current page size\n\n`params.filter` Currently applied filter\n\n`callback(items, size)` Callback function with arguments:\n   - `items` Current page of items\n   - `size` Total number of items.",
+          "type": "ComboBoxDataProvider<TItem> | null | undefined"
+        }
+      ],
+      "events": [
+        {
+          "name": "on-close"
+        },
+        {
+          "name": "selection-changed"
+        },
+        {
+          "name": "selected-items-changed"
+        },
+        {
+          "name": "change",
+          "description": "Fired when the user commits a value change."
+        },
+        {
+          "name": "custom-value-set",
+          "description": "Fired when the user sets a custom value."
+        },
+        {
+          "name": "filter-changed",
+          "description": "Fired when the `filter` property changes."
+        },
+        {
+          "name": "invalid-changed",
+          "description": "Fired when the `invalid` property changes."
+        },
+        {
+          "name": "opened-changed",
+          "description": "Fired when the `opened` property changes."
+        },
+        {
+          "name": "selected-item-changed",
+          "description": "Fired when the `selectedItem` property changes."
+        },
+        {
+          "name": "value-changed",
+          "description": "Fired when the `value` property changes."
+        }
+      ]
+    }
+  ]
+}
