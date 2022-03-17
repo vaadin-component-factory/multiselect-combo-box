@@ -199,7 +199,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   /** @private */
   _selectItem(item) {
     if (!this._isItemChecked(item)) {
-      this._lastSelectedIndex = this.items.findIndex(item2 => item2 === item);
+      this._lastSelectedIndex = this.filteredItems.findIndex(item2 => item2 === item);
       this.selectedItems = [...this.selectedItems, item];
     }
   }
@@ -213,7 +213,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
           return i[this.itemValuePath] === item[this.itemValuePath];
         }
       });
-      this._lastSelectedIndex = this.items.findIndex(item2 => item2 === item);
+      this._lastSelectedIndex = this.filteredItems.findIndex(item2 => item2 === item);
 
       this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
     }
@@ -279,7 +279,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   }
 
   static get version() {
-    return '2.0.0.beta1';
+    return '2.0.1';
   }
 }
 
