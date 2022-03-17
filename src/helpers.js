@@ -83,23 +83,32 @@ export function renderLabel() {
   }, '');
 }
 
+/** Copy of the _overlaySelectedItemChanged from vaadin-combo-box-mixin **/
 export function overlaySelectedItemChanged(e) {
   // stop this private event from leaking outside.
   e.stopPropagation();
+
+  // BEGIN customize
   /** handle the selection **/
   if (!this._isItemChecked(e.detail.item)) {
     this._selectItem(e.detail.item);
   } else {
     this._deselectItem(e.detail.item);
   }
+  // END customize
 
   if (this.opened) {
     this._focusedIndex = this.filteredItems.indexOf(e.detail.item);
+    // BEGIN customize
+    // this.close();
+    // END customize
   } else if (this.selectedItem !== e.detail.item) {
     this.selectedItem = e.detail.item;
     this._detectAndDispatchChange();
   }
+  // BEGIN customize
   this.dispatchEvent(new CustomEvent('change', { bubbles: true }));
+  // END customize
 }
 
 export function onEnter(e) {
@@ -136,6 +145,8 @@ export function onEnter(e) {
   }
 }
 
+// this function is a copy of the _filteredItemsChanged
+// see comments for changes
 export function filterChanged(filter, itemValuePath, itemLabelPath) {
   if (filter === undefined) {
     return;
@@ -143,15 +154,34 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
 
   // Scroll to the top of the list whenever the filter changes.
   this.$.dropdown._scrollIntoView(0);
-
   if (this.items) {
-    // BEGIN customize Add the selected Items on top
-    if (filter) {
-      this.filteredItems = [...this.selectedItems, ...this._filterItems(this.items, filter)];
-    } else {
-      this.filteredItems = this._filterItems(this.items, filter);
-    }
-    // END customize
+    // BEGIN CHANGES
+    // Sort the changes and select the first item not selected
+    this.filteredItems = this._filterItems(this.items, filter)
+      .sort((a, b) => {
+        let indexA;
+        let indexB;
+        if (typeof a === 'string') {
+          indexA = this.selectedItems.indexOf(a);
+          indexB = this.selectedItems.indexOf(b);
+        } else {
+          indexA = this.selectedItems.findIndex(i => i[this.itemValuePath] === a[this.itemValuePath]);
+          indexB = this.selectedItems.findIndex(i => i[this.itemValuePath] === b[this.itemValuePath]);
+        }
+
+        if (indexA > -1 && indexB > -1) {
+          return indexB - indexA;
+        } else if (indexA > -1) {
+          return -1;
+        } else if (indexB > -1) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+      .slice(0);
+    this._focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+    // END CHANGES
   } else {
     // With certain use cases (e. g., external filtering), `items` are
     // undefined. Filtering is unnecessary per se, but the filteredItems
@@ -166,18 +196,27 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
 export function _filteredItemsChanged(e) {
   if (e.path === 'filteredItems' || e.path === 'filteredItems.splices') {
     this._setOverlayItems(this.filteredItems);
-
-    // BEGIN CHANGES TODO JCG const focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
-    // SHOULD SELECT THE FIRST ITEM NOT SELECTED
+    // BEGIN CHANGES
+    // SELECT THE FIRST ITEM NOT SELECTED
     const filterIndex = this.$.dropdown.indexOfLabel(this.filter);
-    // END CHANGES
     if (this.opened) {
-      this._focusedIndex = filterIndex;
+      const focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+      if (focusedIndex > 0) {
+        this._focusedIndex = focusedIndex;
+      } else {
+        this._focusedIndex = filterIndex;
+      }
     } else {
-      // Pre-select item matching the filter to focus it later when overlay opens
-      const valueIndex = this._indexOfValue(this.value, this.filteredItems);
-      this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
+      if (this.filteredItems) {
+        const valueIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+        this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
+      } else {
+        // Pre-select item matching the filter to focus it later when overlay opens
+        const valueIndex = this._indexOfValue(this.value, this.filteredItems);
+        this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
+      }
     }
+    // END CHANGES
 
     // see https://github.com/vaadin/web-components/issues/2615
     if (this.selectedItem === null && this._focusedIndex >= 0) {
@@ -189,25 +228,30 @@ export function _filteredItemsChanged(e) {
   }
 }
 
-export function setOverlayHeight() {
-  if (!this.opened || !this.positionTarget || !this._selector) {
-    return;
+// this function is a copy of the _itemsOrPathsChanged
+// see comments for changes
+/** @private */
+export function _itemsOrPathsChanged(e) {
+  if (e.path === 'items' || e.path === 'items.splices') {
+    if (this.items) {
+      this.filteredItems = this.items.slice(0);
+    } else if (this.__previousItems) {
+      // Only clear filteredItems if the component had items previously but got cleared
+      this.filteredItems = null;
+    }
+
+    if (this._lastSelectedIndex > -1) {
+      this._focusedIndex = this._lastSelectedIndex;
+      this._lastSelectedIndex = -1;
+    } else {
+      const valueIndex = this._indexOfValue(this.value, this.items);
+      this._focusedIndex = valueIndex;
+
+      const item = valueIndex > -1 && this.items[valueIndex];
+      if (item) {
+        this.selectedItem = item;
+      }
+    }
   }
-
-  const targetRect = this.positionTarget.getBoundingClientRect();
-
-  this._scroller.style.maxHeight =
-    (window.ShadyCSS
-      ? window.ShadyCSS.getComputedStyleValue(this, '--vaadin-combo-box-overlay-max-height')
-      : getComputedStyle(this).getPropertyValue('--vaadin-combo-box-overlay-max-height')) || '41vh';
-
-  const maxHeight = this._maxOverlayHeight(targetRect);
-
-  // overlay max height is restrained by the #scroller max height which is set to 65vh in CSS.
-  this.$.dropdown.$.overlay.style.maxHeight = maxHeight;
-
-  // we need to set height for iron-list to make its `firstVisibleIndex` work correctly.
-  this._selector.style.maxHeight = maxHeight;
-
-  this.updateViewportBoundaries();
+  this.__previousItems = e.value;
 }

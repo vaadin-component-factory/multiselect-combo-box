@@ -11,7 +11,7 @@ import {
   _filteredItemsChanged,
   filterChanged,
   renderLabel,
-  setOverlayHeight
+  _itemsOrPathsChanged
 } from './helpers';
 
 /**
@@ -49,12 +49,13 @@ import {
 class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   constructor() {
     super();
-
+    this._lastSelectedIndex = -1;
     this._boundOverriddenCommitValue = commitValue.bind(this);
     this.renderLabel = renderLabel.bind(this);
     this._boundOverriddenOverlaySelectedItemChanged = overlaySelectedItemChanged.bind(this);
     this._boundOnEnter = onEnter.bind(this);
     this._filteredItemsChanged = _filteredItemsChanged.bind(this);
+    this._itemsOrPathsChanged = _itemsOrPathsChanged.bind(this);
 
     // This will prevent the component from setting the
     // `value` property and showing the blue tick beside
@@ -62,6 +63,8 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
     this._selectedItemChanged = () => {};
     this._prefillFocusedItemLabel = () => {};
   }
+
+  // todo jcg --vaadin-combo-box-overlay-max-height 41vh
 
   static get properties() {
     return {
@@ -95,10 +98,11 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
     this._onEnter = this._boundOnEnter;
     this._filterChanged = filterChanged.bind(this);
 
-    this._filterChanged = filterChanged.bind(this);
-
     const boundOldOpenedChanged = this._openedChanged.bind(this);
     this._openedChanged = (value, old) => {
+      if (this.filteredItems) {
+        this._focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+      }
       boundOldOpenedChanged(value, old);
 
       if (value) {
@@ -124,65 +128,54 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
 
     this.$.dropdown.removeEventListener('selection-changed', this._boundOverlaySelectedItemChanged);
     this.$.dropdown.addEventListener('selection-changed', this._boundOverriddenOverlaySelectedItemChanged);
-    this.$.dropdown._setOverlayHeight = setOverlayHeight.bind(this.$.dropdown);
 
-    this.$.dropdown._isItemSelected = (item, selectedItem, itemIdPath) => {
+    // override vaadin-combobox-scroller _isItemSelected
+    this.$.dropdown._scroller.__isItemSelected = (item, selectedItem, itemIdPath) => {
       if (item instanceof ComboBoxPlaceholder) {
         return false;
       } else {
         return this._isItemChecked(item);
       }
     };
-
     this.$.dropdown._scroller.__boundOnItemClick = this.__onItemClick.bind(this.$.dropdown._scroller);
-    /*    debugger;
-    this.$.dropdown._scroller.__onItemClick = e => {
-      debugger;
-      if (e.detail && e.detail.sourceEvent && e.detail.sourceEvent.stopPropagation) {
-        this._stopPropagation(e.detail.sourceEvent);
-      }
-      e.model.children[1].selected = !e.model.children[1].selected;
-
-      this.$.dropdown.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
-    };*/
   }
 
   __onItemClick(e) {
-    // debugger;
     if (e.detail && e.detail.sourceEvent && e.detail.sourceEvent.stopPropagation) {
       this._stopPropagation(e.detail.sourceEvent);
     }
-    e.model.children[1].selected = !e.model.children[1].selected;
+    e.currentTarget.selected = !e.currentTarget.selected;
 
-    this.$.dropdown.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.model.item } }));
+    this.dispatchEvent(new CustomEvent('selection-changed', { detail: { item: e.currentTarget.item } }));
   }
 
   _selectedItemsChanged(value, oldValue) {
-    if (this.items) {
-      this.items = this.items
+    if (this.filteredItems) {
+      this.filteredItems = this.filteredItems
         .sort((a, b) => {
+          let indexA;
+          let indexB;
           if (typeof a === 'string') {
-            if (this.selectedItems.indexOf(a) > -1) {
-              return -1;
-            } else if (this.selectedItems.indexOf(b) > -1) {
-              return 1;
-            } else {
-              return 0;
-            }
+            indexA = this.selectedItems.indexOf(a);
+            indexB = this.selectedItems.indexOf(b);
           } else {
-            if (this.selectedItems.some(i => i[this.itemValuePath] === a[this.itemValuePath])) {
-              return -1;
-            } else if (this.selectedItems.some(i => i[this.itemValuePath] === b[this.itemValuePath])) {
-              return 1;
-            } else {
-              return 0;
-            }
+            indexA = this.selectedItems.findIndex(i => i[this.itemValuePath] === a[this.itemValuePath]);
+            indexB = this.selectedItems.findIndex(i => i[this.itemValuePath] === b[this.itemValuePath]);
+          }
+
+          if (indexA > -1 && indexB > -1) {
+            return indexB - indexA;
+          } else if (indexA > -1) {
+            return -1;
+          } else if (indexB > -1) {
+            return 1;
+          } else {
+            return 0;
           }
         })
         .slice(0);
     }
 
-    // todo jcg this render()
     this.requestContentUpdate();
 
     const e = new CustomEvent('selected-items-changed', {
@@ -206,6 +199,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   /** @private */
   _selectItem(item) {
     if (!this._isItemChecked(item)) {
+      this._lastSelectedIndex = this.items.findIndex(item2 => item2 === item);
       this.selectedItems = [...this.selectedItems, item];
     }
   }
@@ -219,6 +213,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
           return i[this.itemValuePath] === item[this.itemValuePath];
         }
       });
+      this._lastSelectedIndex = this.items.findIndex(item2 => item2 === item);
 
       this.selectedItems = [...this.selectedItems.slice(0, itemIndex), ...this.selectedItems.slice(itemIndex + 1)];
     }
@@ -272,7 +267,6 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
       topButtonsContainer.appendChild(selectAllButton);
       topButtonsContainer.appendChild(clearButton);
 
-      // todo jcg check how I can access this
       const targetNode = this.$.dropdown.$.overlay.shadowRoot.querySelector('[part~="content"]');
       if (!targetNode.querySelector('#top-buttons-container')) {
         targetNode.prepend(topButtonsContainer);
@@ -285,7 +279,7 @@ class VcfMultiselectComboBox extends ElementMixin(ThemableMixin(ComboBox)) {
   }
 
   static get version() {
-    return '1.0.0';
+    return '2.0.0.beta1';
   }
 }
 
