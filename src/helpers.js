@@ -147,15 +147,17 @@ export function onEnter(e) {
 
 // this function is a copy of the _filteredItemsChanged
 // see comments for changes
-export function filterChanged(filter, itemValuePath, itemLabelPath) {
+export function filterChanged(filter, _itemValuePath, _itemLabelPath) {
   if (filter === undefined) {
     return;
   }
 
   // Scroll to the top of the list whenever the filter changes.
   this.$.dropdown._scrollIntoView(0);
+
   if (this.items) {
     // BEGIN CHANGES
+    // previous code: this.filteredItems = this._filterItems(this.items, filter);
     // Sort the changes and select the first item not selected
     this.filteredItems = this._filterItems(this.items, filter)
       .sort((a, b) => {
@@ -186,46 +188,56 @@ export function filterChanged(filter, itemValuePath, itemLabelPath) {
     // With certain use cases (e. g., external filtering), `items` are
     // undefined. Filtering is unnecessary per se, but the filteredItems
     // observer should still be invoked to update focused item.
-    this._filteredItemsChanged({ path: 'filteredItems', value: this.filteredItems }, itemValuePath, itemLabelPath);
+    this._filteredItemsChanged(this.filteredItems);
   }
 }
 
 // this function is a copy of the _filteredItemsChanged
 // see comments for changes
 /** @private */
-export function _filteredItemsChanged(e) {
-  if (e.path === 'filteredItems' || e.path === 'filteredItems.splices') {
-    this._setOverlayItems(this.filteredItems);
-    // BEGIN CHANGES
-    // SELECT THE FIRST ITEM NOT SELECTED
-    const filterIndex = this.$.dropdown.indexOfLabel(this.filter);
-    if (this.opened) {
-      const focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
-      if (focusedIndex > 0) {
-        this._focusedIndex = focusedIndex;
-      } else {
-        this._focusedIndex = filterIndex;
-      }
-    } else {
-      if (this.filteredItems) {
-        const valueIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
-        this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
-      } else {
-        // Pre-select item matching the filter to focus it later when overlay opens
-        const valueIndex = this._indexOfValue(this.value, this.filteredItems);
-        this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
-      }
-    }
-    // END CHANGES
+export function _filteredItemsChanged(filteredItems, _itemValuePath, _itemLabelPath) {
+  this._setOverlayItems(filteredItems);
 
-    // see https://github.com/vaadin/web-components/issues/2615
-    if (this.selectedItem === null && this._focusedIndex >= 0) {
-      const filteredItem = this.filteredItems[this._focusedIndex];
-      if (this._getItemValue(filteredItem) === this.value) {
-        this._selectItemForValue(this.value);
-      }
+  // When the external filtering is used and `value` was provided before `filteredItems`,
+  // initialize the selected item with the current value here. This will also cause
+  // the input element value to sync. In other cases, the selected item is already initialized
+  // in other observers such as `valueChanged`, `_itemsChanged`.
+  const valueIndex = this._indexOfValue(this.value, filteredItems);
+  if (this.selectedItem === null && valueIndex >= 0) {
+    this._selectItemForValue(this.value);
+  }
+  /*
+  const inputValue = this._inputElementValue;
+  if (inputValue === undefined || inputValue === this._getItemLabel(this.selectedItem)) {
+    // When the input element value is the same as the current value or not defined,
+    // set the focused index to the item that matches the value.
+    this._focusedIndex = this.$.dropdown.indexOfLabel(this._getItemLabel(this.selectedItem));
+  } else {
+    // When the user filled in something that is different from the current value = filtering is enabled,
+    // set the focused index to the item that matches the filter query.
+    this._focusedIndex = this.$.dropdown.indexOfLabel(this.filter);
+  }*/
+  // BEGIN CHANGES
+  // SELECT THE FIRST ITEM NOT SELECTED
+  const filterIndex = this.$.dropdown.indexOfLabel(this.filter);
+  if (this.opened) {
+    const focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+    if (focusedIndex > 0) {
+      this._focusedIndex = focusedIndex;
+    } else {
+      this._focusedIndex = filterIndex;
+    }
+  } else {
+    if (this.filteredItems) {
+      const valueIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
+      this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
+    } else {
+      // Pre-select item matching the filter to focus it later when overlay opens
+      const valueIndex = this._indexOfValue(this.value, this.filteredItems);
+      this._focusedIndex = filterIndex === -1 ? valueIndex : filterIndex;
     }
   }
+  // END CHANGES
 }
 
 // this function is a copy of the _itemsOrPathsChanged
