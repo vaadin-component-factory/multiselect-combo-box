@@ -1,6 +1,6 @@
 {
   "name": "@vaadin-component-factory/vcf-multiselect-combo-box",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "A multiselect combobox",
   "main": "src/vcf-multiselect-combo-box.js",
   "author": "Vaadin Ltd",
@@ -95,12 +95,12 @@
     "@web/dev-server": "^0.1.18",
     "web-component-analyzer": "^1.1.6"
   },
-    "overrides": {
-      "@vaadin/tabs": "^23.0.0",
-      "@vaadin/component-base": "^23.0.0",
-      "@vaadin/vaadin-lumo-styles": "^23.0.0",
-      "@vaadin/vaadin-themable-mixin": "^23.0.0"
-    },
+  "overrides": {
+    "@vaadin/tabs": "^23.0.0",
+    "@vaadin/component-base": "^23.0.0",
+    "@vaadin/vaadin-lumo-styles": "^23.0.0",
+    "@vaadin/vaadin-themable-mixin": "^23.0.0"
+  },
   "bugs": {
     "url": "https://github.com/vaadin-component-factory/vcf-multiselect-combo-box/issues"
   },
