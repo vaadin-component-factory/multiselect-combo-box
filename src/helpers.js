@@ -150,7 +150,7 @@ export function _filteredItemsChanged(e, itemValuePath, itemLabelPath) {
   }
   if (e.path === 'filteredItems' || e.path === 'filteredItems.splices') {
     this._setOverlayItems(this.filteredItems);
-    if (this.opened || this.autoOpenDisabled) {
+    if ((this.opened || this.autoOpenDisabled) && this.selectedItems.length !== this.filteredItems.length) {
       this._focusedIndex = this.filteredItems.findIndex(item => !this._isItemChecked(item));
     } else {
       this._focusedIndex = -1;
